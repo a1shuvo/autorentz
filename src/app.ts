@@ -10,10 +10,9 @@ app.use(express.json());
 // initializing DB
 initDB();
 
-// app.get("/", (req: Request, res: Response) => {
-//   res.send("Hello Next Level Developers!");
-// });
-
+app.get("/", (req: Request, res: Response) => {
+  res.send("Welcome to AutoRentz!");
+});
 
 // Handle undefined routes
 app.use((req, res) => {
