@@ -4,13 +4,13 @@ import { authServices } from "./auth.service";
 const signUp = async (req: Request, res: Response) => {
   try {
     const result = await authServices.signUp(req.body);
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "User registered successfully",
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Internal server error!",
       errors: error.message,
@@ -22,13 +22,13 @@ const signIn = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     const result = await authServices.signIn(email, password);
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Login successful",
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Internal server error!",
       errors: error.message,
