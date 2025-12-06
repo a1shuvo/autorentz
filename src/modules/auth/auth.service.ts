@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { pool } from "../../config/db";
+import { generateToken } from "../../utils/jwt";
 
 interface IUser {
   id?: number;
@@ -37,7 +38,35 @@ const signUp = async (user: IUser) => {
   return result.rows[0];
 };
 
-const signIn = async () => {};
+const signIn = async (email: string, password: string) => {
+  const result = await pool.query(`SELECT * FROM users WHERE email=$1`, [
+    email.toLowerCase(),
+  ]);
+  const user = result.rows[0];
+  if (!user) {
+    throw new Error("Invalid email or password");
+  }
+
+  // check password is matched or not
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    throw new Error("Invalid email or password");
+  }
+
+  // generate JWT token
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  // Remove password, created_at, updated_at from response
+  delete user.password;
+  delete user.created_at;
+  delete user.updated_at;
+
+  return { token, user };
+};
 
 export const authServices = {
   signUp,
