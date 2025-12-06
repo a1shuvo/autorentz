@@ -30,6 +30,12 @@ const createVehicle = async (vehicle: IVehicle) => {
   return result.rows[0];
 };
 
+const getAllVehicles = async () => {
+  const result = await pool.query(`SELECT * FROM vehicles`);
+  return result.rows;
+};
+
 export const vehicleServices = {
   createVehicle,
+  getAllVehicles,
 };
