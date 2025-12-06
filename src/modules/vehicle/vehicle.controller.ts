@@ -44,7 +44,62 @@ const getAllVehicles = async (req: Request, res: Response) => {
   }
 };
 
+const getVehicleById = async (req: Request, res: Response) => {
+  try {
+    const result = await vehicleServices.getVehicleById(req.params.vehicleId!);
+
+    if (!result) {
+      return res.status(200).json({
+        success: false,
+        message: "No vehicles found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Vehicle retrieved successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      errors: error.message,
+    });
+  }
+};
+
+const updateVehicle = async (req: Request, res: Response) => {
+  try {
+    const result = await vehicleServices.updateVehicle(
+      req.body,
+      req.params.vehicleId!
+    );
+
+    // if (!result) {
+    //   return res.status(200).json({
+    //     success: false,
+    //     message: "No vehicles found",
+    //   });
+    // }
+
+    return res.status(200).json({
+      success: true,
+      message: "Vehicle updated successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      errors: error.message,
+    });
+  }
+};
+
 export const vehicleControllers = {
   createVehicle,
   getAllVehicles,
+  getVehicleById,
+  updateVehicle,
 };
