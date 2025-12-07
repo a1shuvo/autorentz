@@ -25,7 +25,41 @@ const updateUser = async (user: IUser, userId: string, userRole: string) => {
   }
 };
 
+export const deleteUser = async (userId: string) => {
+  const user = await pool.query(`SELECT id FROM users WHERE id = $1`, [userId]);
+
+  if (user.rowCount === 0) {
+    return {
+      success: false,
+      status: 404,
+      message: "User not found",
+    };
+  }
+
+  const activeBooking = await pool.query(
+    `SELECT id FROM bookings WHERE customer_id = $1 AND status = 'active'`,
+    [userId]
+  );
+
+  if ((activeBooking.rowCount ?? 0) > 0) {
+    return {
+      success: false,
+      status: 400,
+      message: "User has an active booking",
+    };
+  }
+
+  await pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
+
+  return {
+    success: true,
+    status: 200,
+    message: "User deleted successfully",
+  };
+};
+
 export const userServices = {
   getAllUsers,
   updateUser,
+  deleteUser,
 };

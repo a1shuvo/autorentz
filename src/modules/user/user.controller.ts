@@ -63,7 +63,25 @@ const updateUser = async (req: Request, res: Response) => {
   }
 };
 
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const result = await userServices.deleteUser(req.params.userId!);
+
+    return res.status(result.status).json({
+      success: result.success,
+      message: result.message,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!",
+      errors: error.message,
+    });
+  }
+};
+
 export const userControllers = {
   getAllUsers,
   updateUser,
+  deleteUser,
 };
