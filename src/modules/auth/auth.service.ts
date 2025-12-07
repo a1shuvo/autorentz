@@ -60,10 +60,8 @@ const signIn = async (email: string, password: string) => {
     role: user.role,
   });
 
-  // Remove password, created_at, updated_at from response
+  // Remove password from response
   delete user.password;
-  delete user.created_at;
-  delete user.updated_at;
 
   return { token, user };
 };
