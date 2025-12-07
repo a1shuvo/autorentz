@@ -7,6 +7,10 @@ interface IBooking {
   rent_end_date: string;
 }
 
+interface IBookingStatus {
+  status: "cancelled" | "returned";
+}
+
 const createBooking = async (payload: IBooking) => {
   const { customer_id, vehicle_id, rent_start_date, rent_end_date } = payload;
 
@@ -101,7 +105,80 @@ const getAllBookings = async (user: Record<string, unknown>) => {
   }
 };
 
+const updateBooking = async (
+  bookingId: string,
+  user: Record<string, unknown>,
+  bookingStatus: IBookingStatus
+) => {
+  const now = new Date();
+
+  // system auto return
+  if (!user) {
+    const expired = await pool.query(
+      `SELECT * FROM bookings WHERE status='active' AND rent_end_date < $1`,
+      [now]
+    );
+
+    for (const b of expired.rows) {
+      await pool.query(`UPDATE bookings SET status='returned' WHERE id=$1`, [
+        b.id,
+      ]);
+      await pool.query(
+        `UPDATE vehicles SET availability_status='available' WHERE id=$1`,
+        [b.vehicle_id]
+      );
+    }
+
+    return { autoReturned: expired.rows.length };
+  }
+
+  // user update
+  if (!bookingId || !bookingStatus)
+    throw new Error("Booking ID and status are required");
+
+  const bookingResult = await pool.query(`SELECT * FROM bookings WHERE id=$1`, [
+    bookingId,
+  ]);
+  if (bookingResult.rowCount === 0) throw new Error("Booking not found");
+
+  const booking = bookingResult.rows[0];
+
+  // role-based rules
+  if (user.role === "customer") {
+    if (bookingStatus.status !== "cancelled")
+      throw new Error("Customers can only cancel");
+    if (booking.customer_id !== user.id)
+      throw new Error("Cannot cancel others bookings");
+
+    const rentStart = new Date(booking.rent_start_date);
+    if (now >= rentStart) throw new Error("Cannot cancel after start date");
+  }
+
+  if (booking.status !== "active")
+    throw new Error("Only active bookings can be updated");
+
+  // Update booking
+  const updated = await pool.query(
+    `UPDATE bookings SET status=$1 WHERE id=$2 RETURNING *`,
+    [bookingStatus.status, bookingId]
+  );
+
+  // Update vehicle availability
+  if (
+    bookingStatus.status === "cancelled" ||
+    bookingStatus.status === "returned"
+  ) {
+    await pool.query(
+      `UPDATE vehicles SET availability_status='available' WHERE id=$1`,
+      [booking.vehicle_id]
+    );
+  }
+
+  return updated.rows[0];
+};
+
 export const bookingServices = {
   createBooking,
   getAllBookings,
+  updateBooking,
 };

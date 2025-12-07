@@ -48,7 +48,47 @@ const getAllBookings = async (req: Request, res: Response) => {
   }
 };
 
+const updateBooking = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Missing user information",
+      });
+    }
+
+    const updatedBooking = await bookingServices.updateBooking(
+      req.params.bookingId!,
+      req.user,
+      req.body
+    );
+
+    const message =
+      req.body.status === "cancelled"
+        ? "Booking cancelled successfully"
+        : "Booking marked as returned. Vehicle is now available";
+
+    const result =
+      req.body.status === "returned"
+        ? { ...updatedBooking, vehicle: { availability_status: "available" } }
+        : updatedBooking;
+
+    return res.status(200).json({
+      success: true,
+      message,
+      data: result,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      errors: error.message,
+    });
+  }
+};
+
 export const bookingControllers = {
   createBooking,
   getAllBookings,
+  updateBooking,
 };
