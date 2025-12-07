@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { pool } from "../../config/db";
 import { generateToken } from "../../utils/jwt";
 
-interface IUser {
+export interface IUser {
   id?: number;
   name?: string;
   email: string;
