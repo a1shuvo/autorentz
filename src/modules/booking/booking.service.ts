@@ -62,6 +62,46 @@ const createBooking = async (payload: IBooking) => {
   };
 };
 
+const getAllBookings = async (user: Record<string, unknown>) => {
+  if (user.role === "admin") {
+    const result = await pool.query(
+      `SELECT b.id, b.customer_id, b.vehicle_id, b.rent_start_date, b.rent_end_date, b.total_price, b.status,
+        json_build_object(
+          'name', u.name,
+          'email', u.email
+        ) AS customer,
+        json_build_object(
+          'vehicle_name', v.vehicle_name,
+          'registration_number', v.registration_number
+        ) AS vehicle
+      FROM bookings b
+      LEFT JOIN users u ON b.customer_id = u.id
+      LEFT JOIN vehicles v ON b.vehicle_id = v.id
+      ORDER BY b.rent_start_date DESC`
+    );
+
+    return result.rows;
+  } else {
+    const result = await pool.query(
+      `SELECT b.id, b.vehicle_id, b.rent_start_date, b.rent_end_date, b.total_price, b.status,
+        json_build_object(
+          'vehicle_name', v.vehicle_name,
+          'registration_number', v.registration_number,
+          'type', v.type
+        ) AS vehicle
+      FROM bookings b
+      LEFT JOIN vehicles v ON b.vehicle_id = v.id
+      WHERE b.customer_id = $1
+      ORDER BY b.rent_start_date DESC
+      `,
+      [user.id]
+    );
+
+    return result.rows;
+  }
+};
+
 export const bookingServices = {
   createBooking,
+  getAllBookings,
 };
