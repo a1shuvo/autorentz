@@ -104,7 +104,7 @@ const deleteVehicle = async (req: Request, res: Response) => {
     if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
-        message: "No vehicles found",
+        message: "No vehicle found",
       });
     }
 
@@ -113,10 +113,9 @@ const deleteVehicle = async (req: Request, res: Response) => {
       message: "Vehicle deleted successfully",
     });
   } catch (error: any) {
-    return res.status(500).json({
+    return res.status(400).json({
       success: false,
-      message: "Internal server error!",
-      errors: error.message,
+      message: error.message || "Failed to delete vehicle",
     });
   }
 };
